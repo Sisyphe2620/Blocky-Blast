@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Blocky Blast · 毛毡方块原型</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; min-height: 100vh; background: linear-gradient(#c3b2e8, #b3a1de 60%, #a894d8);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #fff;
+    display: flex; flex-direction: column; align-items: center; padding: 10px 10px 24px; user-select: none; }
+  .top { width: min(94vw, 430px); display: flex; align-items: center; justify-content: space-between; margin: 6px 0 8px; }
+  .score-pill { background: #8f7cc9; border-radius: 999px; padding: 6px 16px; font-size: 26px; font-weight: 800;
+    box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+  .score-pill small { font-size: 12px; font-weight: 600; opacity: .85; display: block; text-align: center; }
+  .btn { background: #8f7cc9; color: #fff; border: none; border-radius: 999px; padding: 8px 14px; font-size: 15px;
+    font-weight: 700; box-shadow: 0 3px 0 rgba(0,0,0,.15); cursor: pointer; }
+  .btn:active { transform: translateY(2px); box-shadow: none; }
+  #board { width: min(94vw, 430px); aspect-ratio: 1; background: #cbbcf0; border-radius: 18px; padding: 8px;
+    display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 4px;
+    box-shadow: inset 0 0 0 3px #d9cdf5, 0 6px 0 rgba(0,0,0,.12); touch-action: none; }
+  .cell { background: #7d6cab; border-radius: 8px; position: relative; }
+  .cell.preview-ok { outline: 3px solid rgba(255,255,255,.9); filter: brightness(1.15); }
+  .cell.preview-bad { outline: 3px solid rgba(255,80,80,.9); }
+  .cell.clearing { animation: pop .25s ease; }
+  @keyframes pop { 50% { transform: scale(1.15); filter: brightness(1.5); } }
+  .blk { position: absolute; inset: 0; border-radius: 8px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.35); }
+  /* laughing face: two eyes + open smile, drawn with gradients */
+  .blk::before { content: ""; position: absolute; inset: 0; border-radius: 8px;
+    background:
+      radial-gradient(circle at 34% 32%, #2b2135 11%, transparent 13%),
+      radial-gradient(circle at 66% 32%, #2b2135 11%, transparent 13%); }
+  .blk::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
+    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
+  .c0 { background: #a78bda; } .c1 { background: #f2a0c0; } .c2 { background: #f5a83c; }
+  .c3 { background: #f7d54a; } .c4 { background: #5fd3c0; } .c5 { background: #6db9f0; }
+  #tray { width: min(94vw, 430px); display: flex; justify-content: space-around; align-items: flex-end;
+    margin-top: 16px; min-height: 110px; }
+  .piece { display: grid; gap: 3px; padding: 6px; border-radius: 12px; cursor: grab; touch-action: none; }
+  .piece.selected { background: rgba(255,255,255,.35); outline: 3px solid #fff; }
+  .piece.used { visibility: hidden; }
+  .piece .pcell { width: 30px; height: 30px; position: relative; border-radius: 7px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.35); }
+  .piece .pcell::before { content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 34% 32%, #2b2135 12%, transparent 14%),
+      radial-gradient(circle at 66% 32%, #2b2135 12%, transparent 14%); }
+  .piece .pcell::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
+    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
+  .piece .pcell.empty { background: transparent; box-shadow: none; }
+  .piece .pcell.empty::before, .piece .pcell.empty::after { display: none; }
+  #ghost .pcell::before { content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 34% 32%, #2b2135 12%, transparent 14%),
+      radial-gradient(circle at 66% 32%, #2b2135 12%, transparent 14%); }
+  #ghost .pcell::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
+    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
+  #ghost .pcell.empty::before, #ghost .pcell.empty::after { display: none; }
+  #ghost { position: fixed; pointer-events: none; z-index: 50; display: none; opacity: .85; }
+  #overlay { position: fixed; inset: 0; background: rgba(43,33,53,.72); display: none;
+    align-items: center; justify-content: center; z-index: 60; }
+  #overlay .card { background: #fff; color: #4a3a6b; border-radius: 20px; padding: 28px 24px; text-align: center; width: min(86vw, 320px); }
+  #overlay h2 { margin: 0 0 8px; font-size: 24px; }
+  #overlay p { margin: 0 0 16px; color: #7a6aa8; }
+  #overlay .btn { background: #a78bda; font-size: 17px; padding: 10px 22px; }
+  .hint { margin-top: 12px; font-size: 13px; opacity: .85; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="score-pill"><small>分数 SCORE</small><span id="score">0</span></div>
+    <div class="score-pill"><small>最高 BEST</small><span id="best">0</span></div>
+    <button class="btn" id="restart">↻ 重开</button>
+  </div>
+  <div id="board"></div>
+  <div id="tray"></div>
+  <div id="ghost"></div>
+  <div id="overlay"><div class="card"><h2>放不下啦！</h2><p id="finalScore"></p><button class="btn" id="again">再来一局</button></div></div>
+  <div class="hint">拖方块进棋盘，填满一行或一列就消除 · 放不下即结束<br>占位美术：等你的 ChatGPT 方块图到了直接替换</div>
+
+<script>
+"use strict";
+/* ---- pure logic (no DOM) ---- */
+const SIZE = 8;
+const SHAPES = [
+  [[0,0]], [[0,0],[0,1]], [[0,0],[1,0]], [[0,0],[0,1],[0,2]], [[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[1,0],[1,1]], [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],
+  [[0,0],[0,1],[1,0]], [[0,0],[0,1],[1,1]], [[0,0],[1,0],[1,1]], [[0,0],[1,0],[0,1]],
+  [[0,0],[0,1],[0,2],[1,1]], [[0,0],[1,0],[2,0],[1,1]],
+  [[0,0],[0,1],[1,1],[1,2]], [[0,0],[1,0],[1,1],[2,1]],
+  [[0,0],[0,1],[0,2],[0,3]], [[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]], [[0,0],[1,0],[2,0],[3,0],[4,0]],
+  [[0,0],[0,1],[1,0],[1,1],[2,0]], [[0,0],[0,1],[0,2],[1,0],[2,0]],
+];
+function emptyBoard() { return Array.from({length: SIZE}, () => Array(SIZE).fill(-1)); }
+function canPlace(board, shape, r, c) {
+  return shape.every(([dr, dc]) => {
+    const rr = r + dr, cc = c + dc;
+    return rr >= 0 && rr < SIZE && cc >= 0 && cc < SIZE && board[rr][cc] === -1;
+  });
+}
+function placeOn(board, shape, r, c, color) {
+  shape.forEach(([dr, dc]) => { board[r + dr][c + dc] = color; });
+}
+function fullLines(board) {
+  const rows = [], cols = [];
+  for (let r = 0; r < SIZE; r++) if (board[r].every(v => v !== -1)) rows.push(r);
+  for (let c = 0; c < SIZE; c++) if (board.every(row => row[c] !== -1)) cols.push(c);
+  return { rows, cols };
+}
+function clearLines(board) {
+  const { rows, cols } = fullLines(board);
+  rows.forEach(r => { for (let c = 0; c < SIZE; c++) board[r][c] = -1; });
+  cols.forEach(c => { for (let r = 0; r < SIZE; r++) board[r][c] = -1; });
+  return rows.length + cols.length;
+}
+function anyFit(board, shapes) {
+  return shapes.some(shape => {
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++)
+      if (canPlace(board, shape, r, c)) return true;
+    return false;
+  });
+}
+function randomPiece() {
+  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+  const color = Math.floor(Math.random() * 6);
+  return { shape, color };
+}
+if (typeof module !== "undefined") {
+  module.exports = { SIZE, SHAPES, emptyBoard, canPlace, placeOn, fullLines, clearLines, anyFit, randomPiece };
+}
+
+/* ---- DOM game ---- */
+if (typeof document !== "undefined") {
+  const boardEl = document.getElementById("board");
+  const trayEl = document.getElementById("tray");
+  const ghostEl = document.getElementById("ghost");
+  const scoreEl = document.getElementById("score");
+  const bestEl = document.getElementById("best");
+  const overlayEl = document.getElementById("overlay");
+  let board = emptyBoard(), tray = [], score = 0, selected = -1;
+  let best = 0;
+  try { best = parseInt(localStorage.getItem("blocky-best") || "0", 10) || 0; } catch (e) {}
+  bestEl.textContent = best;
+
+  function buildBoard() {
+    boardEl.innerHTML = "";
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      const d = document.createElement("div");
+      d.className = "cell"; d.dataset.r = r; d.dataset.c = c;
+      boardEl.appendChild(d);
+    }
+  }
+  function renderBoard() {
+    [...boardEl.children].forEach((cell, i) => {
+      const r = Math.floor(i / SIZE), c = i % SIZE;
+      cell.querySelector(".blk")?.remove();
+      if (board[r][c] !== -1) {
+        const b = document.createElement("div");
+        b.className = "blk c" + board[r][c];
+        cell.appendChild(b);
+      }
+    });
+  }
+  function shapeBox(shape) {
+    const rs = shape.map(s => s[0]), cs = shape.map(s => s[1]);
+    return { rows: Math.max(...rs) + 1, cols: Math.max(...cs) + 1 };
+  }
+  function renderTray() {
+    trayEl.innerHTML = "";
+    tray.forEach((p, i) => {
+      const box = shapeBox(p.shape);
+      const d = document.createElement("div");
+      d.className = "piece" + (p.used ? " used" : "") + (selected === i ? " selected" : "");
+      d.style.gridTemplateColumns = "repeat(" + box.cols + ", 30px)";
+      d.dataset.i = i;
+      for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
+        const cell = document.createElement("div");
+        const filled = p.shape.some(([dr, dc]) => dr === r && dc === c);
+        cell.className = "pcell" + (filled ? " c" + p.color : " empty");
+        d.appendChild(cell);
+      }
+      d.addEventListener("pointerdown", e => startDrag(e, i, d));
+      d.addEventListener("click", () => { if (!dragging) { selected = (selected === i ? -1 : i); renderTray(); } });
+      trayEl.appendChild(d);
+    });
+  }
+  function refill() { tray = [randomPiece(), randomPiece(), randomPiece()]; selected = -1; renderTray(); }
+  function setScore(n) {
+    score = n; scoreEl.textContent = score;
+    if (score > best) { best = score; bestEl.textContent = best;
+      try { localStorage.setItem("blocky-best", String(best)); } catch (e) {} }
+  }
+  function cellFromPoint(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const cell = el && el.closest ? el.closest(".cell") : null;
+    if (!cell) return null;
+    return { r: +cell.dataset.r, c: +cell.dataset.c };
+  }
+  function previewAt(r, c, ok) {
+    [...boardEl.children].forEach(cell => cell.classList.remove("preview-ok", "preview-bad"));
+    if (r == null || selected < 0 && !dragging) return;
+    const p = tray[dragIndex >= 0 ? dragIndex : selected];
+    if (!p) return;
+    const good = canPlace(board, p.shape, r, c);
+    p.shape.forEach(([dr, dc]) => {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= SIZE || cc < 0 || cc >= SIZE) return;
+      boardEl.children[rr * SIZE + cc].classList.add(good ? "preview-ok" : "preview-bad");
+    });
+  }
+  function tryPlace(i, r, c) {
+    const p = tray[i];
+    if (!p || p.used || !canPlace(board, p.shape, r, c)) return false;
+    placeOn(board, p.shape, r, c, p.color);
+    p.used = true;
+    let gained = p.shape.length;
+    const lines = clearLines(board);
+    if (lines > 0) gained += lines * 10 + (lines > 1 ? 20 : 0);
+    setScore(score + gained);
+    renderBoard();
+    if (tray.every(t => t.used)) refill();
+    selected = -1; renderTray();
+    const remaining = tray.filter(t => !t.used).map(t => t.shape);
+    if (remaining.length && !anyFit(board, remaining)) gameOver();
+    return true;
+  }
+  function gameOver() {
+    document.getElementById("finalScore").textContent = "本局 " + score + " 分 · 最高 " + best + " 分";
+    overlayEl.style.display = "flex";
+  }
+  function newGame() {
+    board = emptyBoard(); setScore(0); overlayEl.style.display = "none";
+    buildBoard(); renderBoard(); refill();
+  }
+
+  /* drag */
+  let dragging = false, dragIndex = -1, dragMoved = false;
+  function startDrag(e, i, el) {
+    if (tray[i].used) return;
+    dragging = true; dragMoved = false; dragIndex = i; selected = i;
+    e.preventDefault();
+    const box = shapeBox(tray[i].shape);
+    ghostEl.innerHTML = "";
+    ghostEl.style.display = "block";
+    ghostEl.style.width = box.cols * 30 + "px";
+    ghostEl.style.display = "grid";
+    ghostEl.style.gridTemplateColumns = "repeat(" + box.cols + ", 30px)";
+    ghostEl.style.gap = "3px";
+    for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
+      const cell = document.createElement("div");
+      const filled = tray[i].shape.some(([dr, dc]) => dr === r && dc === c);
+      cell.className = "pcell" + (filled ? " c" + tray[i].color : " empty");
+      cell.style.cssText = "width:30px;height:30px;position:relative;border-radius:7px;" +
+        (filled ? "" : "background:transparent;");
+      ghostEl.appendChild(cell);
+    }
+    moveGhost(e);
+    const move = ev => { dragMoved = true; moveGhost(ev);
+      const pos = cellFromPoint(ev.clientX, ev.clientY);
+      if (pos) previewAt(pos.r, pos.c); else previewAt(null, null); };
+    const up = ev => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      ghostEl.style.display = "none";
+      const wasDragging = dragging; dragging = false;
+      const pos = cellFromPoint(ev.clientX, ev.clientY);
+      [...boardEl.children].forEach(cell => cell.classList.remove("preview-ok", "preview-bad"));
+      if (pos && dragMoved) { if (!tryPlace(dragIndex, pos.r, pos.c)) { selected = -1; renderTray(); } }
+      else if (!dragMoved) { selected = dragIndex; renderTray(); }
+      dragIndex = -1;
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+  function moveGhost(e) {
+    ghostEl.style.left = (e.clientX - 30) + "px";
+    ghostEl.style.top = (e.clientY - 30) + "px";
+  }
+  boardEl.addEventListener("click", e => {
+    if (selected < 0 || dragging) return;
+    const cell = e.target.closest(".cell");
+    if (!cell) return;
+    tryPlace(selected, +cell.dataset.r, +cell.dataset.c);
+  });
+  document.getElementById("restart").addEventListener("click", newGame);
+  document.getElementById("again").addEventListener("click", newGame);
+  newGame();
+}
+</script>
+</body>
+</html>
