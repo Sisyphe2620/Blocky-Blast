@@ -185,9 +185,9 @@ if (typeof document !== "undefined") {
   /* board is one baked image (assets/board.png); cell rects measured from it (1024x1024).
      Bottom row was squished in all 3 ChatGPT renders, so it was surgically rebuilt here
      by cloning row 7 — row heights now measure even. Tiles sit centered on these rects. */
-  const CELL_X = [122.7, 235.0, 345.3, 455.8, 566.0, 676.2, 786.7, 899.2];
-  const CELL_Y = [125, 240, 354, 468.5, 582, 696, 809, 921];
-  const CELL_W = 107, CELL_H = 108;
+  const CELL_X = [122.5, 234.5, 345.5, 456.0, 566.0, 676.5, 787.0, 899.0];
+  const CELL_Y = [123, 236, 348, 460.5, 572, 684, 795, 905];
+  const CELL_W = 107, CELL_H = 107;
   function buildBoard() {
     boardEl.innerHTML = "";
     for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
