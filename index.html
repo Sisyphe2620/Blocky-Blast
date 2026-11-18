@@ -9,11 +9,24 @@
   body { margin: 0; min-height: 100vh; background: url(assets/bg.jpg) center top / cover no-repeat fixed, linear-gradient(#c3b2e8, #b3a1de 60%, #a894d8);
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #fff;
     display: flex; flex-direction: column; align-items: center; padding: 10px 10px 24px; user-select: none; }
-  .top { width: min(94vw, 430px); display: flex; align-items: center; justify-content: space-between; margin: 6px 0 8px; }
-  .score-pill { background: #8f7cc9; border-radius: 999px; padding: 6px 16px; font-size: 26px; font-weight: 800;
-    box-shadow: 0 3px 0 rgba(0,0,0,.15); }
-  .score-pill small { font-size: 12px; font-weight: 600; opacity: .85; display: block; text-align: center; }
-  .score-pill img { width: 24px; height: 24px; vertical-align: -6px; margin-right: 2px; }
+  .top { width: min(94vw, 430px); display: flex; align-items: center; justify-content: space-between; margin: 14px 0 10px; gap: 6px; }
+  .best-pill { background: #8f7cc9; border-radius: 999px; padding: 6px 12px 6px 8px; display: flex; align-items: center; gap: 4px;
+    font-size: 22px; font-weight: 800; box-shadow: 0 3px 0 rgba(0,0,0,.15); flex: none; }
+  .best-pill img { width: 26px; height: 26px; }
+  .score-oval { position: relative; background: #f2a0c0; border-radius: 50%; flex: 1; min-width: 0; height: 58px;
+    display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,.12), inset 0 -4px 0 rgba(0,0,0,.08); }
+  .score-oval .oval-star { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; }
+  .icon-btn { width: 44px; height: 44px; border: none; border-radius: 14px; background: #8f7cc9; flex: none;
+    box-shadow: 0 3px 0 rgba(0,0,0,.15); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .icon-btn img { width: 28px; height: 28px; }
+  .icon-btn:active { transform: translateY(2px); box-shadow: none; }
+  .icon-btn.active { outline: 3px solid #fff; }
+  .progress { width: min(94vw, 430px); display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .progress img { width: 26px; height: 26px; flex: none; }
+  .progress .track { flex: 1; height: 16px; background: rgba(255,255,255,.35); border-radius: 999px; overflow: hidden; }
+  .progress .fill { height: 100%; width: 0%; background: #ffd93b; border-radius: 999px; transition: width .3s ease; }
+  .progress .target { font-size: 15px; font-weight: 800; color: #fff; flex: none; }
   .btn { background: #8f7cc9; color: #fff; border: none; border-radius: 999px; padding: 8px 14px; font-size: 15px;
     font-weight: 700; box-shadow: 0 3px 0 rgba(0,0,0,.15); cursor: pointer; }
   .btn:active { transform: translateY(2px); box-shadow: none; }
@@ -28,11 +41,11 @@
   .blk { position: absolute; inset: 0; border-radius: 8px; }
   .blk img { width: 100%; height: 100%; display: block; }
   #tray { width: min(94vw, 430px); display: flex; justify-content: space-around; align-items: flex-end;
-    margin-top: 16px; min-height: 110px; }
+    margin-top: 16px; min-height: 150px; }
   .piece { display: grid; gap: 3px; padding: 6px; border-radius: 12px; cursor: grab; touch-action: none; }
   .piece.selected { background: rgba(255,255,255,.35); outline: 3px solid #fff; }
   .piece.used { visibility: hidden; }
-  .piece .pcell { width: 30px; height: 30px; position: relative; border-radius: 7px; }
+  .piece .pcell { width: 42px; height: 42px; position: relative; border-radius: 7px; }
   .piece .pcell img { width: 100%; height: 100%; display: block; }
   .piece .pcell.empty { background: transparent; box-shadow: none; }
   #ghost .pcell img { width: 100%; height: 100%; display: block; }
@@ -44,22 +57,37 @@
   #overlay h2 { margin: 0 0 8px; font-size: 24px; }
   #overlay p { margin: 0 0 16px; color: #7a6aa8; }
   #overlay .btn { background: #a78bda; font-size: 17px; padding: 10px 22px; }
-  .hint { margin-top: 12px; font-size: 13px; opacity: .85; text-align: center; line-height: 1.6; }
-  .chars { width: min(94vw, 430px); display: block; margin: 14px auto 0; }
+  .under-board { width: min(94vw, 430px); display: flex; justify-content: flex-start; margin-top: 12px; }
+  .shuffle-pill { background: #8f7cc9; color: #fff; border: none; border-radius: 999px; padding: 6px 14px;
+    font-size: 16px; font-weight: 800; box-shadow: 0 3px 0 rgba(0,0,0,.15); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; }
+  .shuffle-pill img { width: 22px; height: 22px; }
+  .shuffle-pill:disabled { opacity: .45; cursor: default; }
+  .shuffle-pill:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+  #settings { position: fixed; inset: 0; background: rgba(43,33,53,.72); display: none;
+    align-items: center; justify-content: center; z-index: 60; }
+  #settings .card { background: #fff; color: #4a3a6b; border-radius: 20px; padding: 24px; text-align: center; width: min(86vw, 300px); }
+  #settings h2 { margin: 0 0 14px; font-size: 20px; }
+  #settings .btn { background: #a78bda; font-size: 16px; padding: 10px 18px; margin: 4px; }
+  .chars-wrap { width: min(94vw, 430px); height: 120px; overflow: hidden; margin: 8px auto 0; display: flex; justify-content: center; }
+  .chars-wrap img { width: 560px; max-width: none; flex: none; transform: rotate(-5deg) translateY(34px); }
 </style>
 </head>
 <body>
   <div class="top">
-    <div class="score-pill"><small>分数 SCORE</small><img src="assets/star-face.png" alt=""><span id="score">0</span></div>
-    <div class="score-pill"><small>最高 BEST</small><img src="assets/star-plain.png" alt=""><span id="best">0</span></div>
-    <button class="btn" id="restart">↻ 重开</button>
+    <div class="best-pill"><img src="assets/trophy.png" alt=""><span id="best">0</span></div>
+    <div class="score-oval"><img class="oval-star" src="assets/star-face.png" alt=""><span id="score">0</span></div>
+    <button class="icon-btn" id="palette" title="切换表情"><img src="assets/palette.png" alt=""></button>
+    <button class="icon-btn" id="gear" title="设置"><img src="assets/gear.png" alt=""></button>
   </div>
+  <div class="progress"><img src="assets/star-face.png" alt=""><div class="track"><div class="fill" id="levelFill"></div></div><span class="target" id="levelTarget">150</span></div>
   <div id="board"></div>
   <div id="tray"></div>
+  <div class="under-board"><button class="shuffle-pill" id="shuffle"><img src="assets/shuffle.png" alt="">× <span id="shuffleLeft">2</span></button></div>
   <div id="ghost"></div>
   <div id="overlay"><div class="card"><img class="trophy" src="assets/trophy.png" alt=""><h2>放不下啦！</h2><p id="finalScore"></p><button class="btn" id="again">再来一局</button></div></div>
-  <div class="hint">拖方块进棋盘，填满一行或一列就消除 · 放不下即结束</div>
-  <img class="chars" src="assets/characters.png" alt="">
+  <div id="settings"><div class="card"><h2>设置</h2><button class="btn" id="setRestart">重开一局</button><button class="btn" id="setClearBest">清除最高分</button><button class="btn" id="setClose">关闭</button></div></div>
+  <div class="chars-wrap"><img src="assets/characters.png" alt=""></div>
 
 <script>
 "use strict";
@@ -121,6 +149,13 @@ if (typeof document !== "undefined") {
   const scoreEl = document.getElementById("score");
   const bestEl = document.getElementById("best");
   const overlayEl = document.getElementById("overlay");
+  const shuffleBtn = document.getElementById("shuffle");
+  const shuffleLeftEl = document.getElementById("shuffleLeft");
+  const levelFillEl = document.getElementById("levelFill");
+  const levelTargetEl = document.getElementById("levelTarget");
+  const paletteBtn = document.getElementById("palette");
+  const gearBtn = document.getElementById("gear");
+  const settingsEl = document.getElementById("settings");
   let board = emptyBoard(), tray = [], score = 0, selected = -1;
   let best = 0;
   try { best = parseInt(localStorage.getItem("blocky-best") || "0", 10) || 0; } catch (e) {}
@@ -136,8 +171,12 @@ if (typeof document !== "undefined") {
     teal: ["tile-laugh-teal.png", "tile-surprised-teal.png"],
     blue: ["tile-laugh-blue.png", "tile-surprised-blue.png", "tile-angry-blue.png"],
   };
+  /* face mode: "mix" (laugh/surprised/angry) or "laugh" only — toggled by the palette button */
+  let faceMode = "mix";
+  try { faceMode = localStorage.getItem("blocky-face-mode") || "mix"; } catch (e) {}
   function pickFace(color) {
     const names = FACES[COLOR_NAMES[color]];
+    if (faceMode === "laugh") return "assets/" + names[0];
     const pool = [names[0], names[0], names[1]].concat(names[2] ? [names[2]] : []);
     return "assets/" + pool[Math.floor(Math.random() * pool.length)];
   }
@@ -177,7 +216,7 @@ if (typeof document !== "undefined") {
       const box = shapeBox(p.shape);
       const d = document.createElement("div");
       d.className = "piece" + (p.used ? " used" : "") + (selected === i ? " selected" : "");
-      d.style.gridTemplateColumns = "repeat(" + box.cols + ", 30px)";
+      d.style.gridTemplateColumns = "repeat(" + box.cols + ", 42px)";
       d.dataset.i = i;
       for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
         const cell = document.createElement("div");
@@ -196,10 +235,25 @@ if (typeof document !== "undefined") {
     });
   }
   function refill() { tray = [randomPiece(), randomPiece(), randomPiece()]; tray.forEach(p => { p.face = pickFace(p.color); }); selected = -1; renderTray(); }
+  const LEVEL_STEP = 150;
   function setScore(n) {
     score = n; scoreEl.textContent = score;
     if (score > best) { best = score; bestEl.textContent = best;
       try { localStorage.setItem("blocky-best", String(best)); } catch (e) {} }
+    const target = (Math.floor(score / LEVEL_STEP) + 1) * LEVEL_STEP;
+    levelFillEl.style.width = ((score % LEVEL_STEP) / LEVEL_STEP * 100) + "%";
+    levelTargetEl.textContent = target;
+  }
+  let shufflesLeft = 2;
+  function updateShuffleUI() {
+    shuffleLeftEl.textContent = shufflesLeft;
+    shuffleBtn.disabled = shufflesLeft <= 0;
+  }
+  function shuffleTrays() {
+    if (shufflesLeft <= 0) return;
+    shufflesLeft--;
+    refill();
+    updateShuffleUI();
   }
   function cellFromPoint(x, y) {
     const el = document.elementFromPoint(x, y);
@@ -245,6 +299,7 @@ if (typeof document !== "undefined") {
   function newGame() {
     board = emptyBoard(); faceBoard = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
     setScore(0); overlayEl.style.display = "none";
+    shufflesLeft = 2; updateShuffleUI();
     buildBoard(); renderBoard(); refill();
   }
 
@@ -257,15 +312,15 @@ if (typeof document !== "undefined") {
     const box = shapeBox(tray[i].shape);
     ghostEl.innerHTML = "";
     ghostEl.style.display = "block";
-    ghostEl.style.width = box.cols * 30 + "px";
+    ghostEl.style.width = box.cols * 42 + "px";
     ghostEl.style.display = "grid";
-    ghostEl.style.gridTemplateColumns = "repeat(" + box.cols + ", 30px)";
+    ghostEl.style.gridTemplateColumns = "repeat(" + box.cols + ", 42px)";
     ghostEl.style.gap = "3px";
     for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
       const cell = document.createElement("div");
       const filled = tray[i].shape.some(([dr, dc]) => dr === r && dc === c);
       cell.className = "pcell" + (filled ? "" : " empty");
-      cell.style.cssText = "width:30px;height:30px;position:relative;border-radius:7px;" +
+      cell.style.cssText = "width:42px;height:42px;position:relative;border-radius:7px;" +
         (filled ? "" : "background:transparent;");
       if (filled) {
         const im = document.createElement("img");
@@ -293,8 +348,8 @@ if (typeof document !== "undefined") {
     window.addEventListener("pointerup", up);
   }
   function moveGhost(e) {
-    ghostEl.style.left = (e.clientX - 30) + "px";
-    ghostEl.style.top = (e.clientY - 30) + "px";
+    ghostEl.style.left = (e.clientX - 42) + "px";
+    ghostEl.style.top = (e.clientY - 42) + "px";
   }
   boardEl.addEventListener("click", e => {
     if (selected < 0 || dragging) return;
@@ -302,8 +357,25 @@ if (typeof document !== "undefined") {
     if (!cell) return;
     tryPlace(selected, +cell.dataset.r, +cell.dataset.c);
   });
-  document.getElementById("restart").addEventListener("click", newGame);
   document.getElementById("again").addEventListener("click", newGame);
+  shuffleBtn.addEventListener("click", shuffleTrays);
+  paletteBtn.addEventListener("click", () => {
+    faceMode = faceMode === "laugh" ? "mix" : "laugh";
+    try { localStorage.setItem("blocky-face-mode", faceMode); } catch (e) {}
+    paletteBtn.classList.toggle("active", faceMode === "laugh");
+    tray.forEach(p => { if (!p.used) p.face = pickFace(p.color); });
+    renderTray();
+  });
+  paletteBtn.classList.toggle("active", faceMode === "laugh");
+  gearBtn.addEventListener("click", () => { settingsEl.style.display = "flex"; });
+  document.getElementById("setClose").addEventListener("click", () => { settingsEl.style.display = "none"; });
+  document.getElementById("setRestart").addEventListener("click", () => { settingsEl.style.display = "none"; newGame(); });
+  document.getElementById("setClearBest").addEventListener("click", () => {
+    best = 0; bestEl.textContent = "0";
+    try { localStorage.removeItem("blocky-best"); } catch (e) {}
+  });
+  settingsEl.addEventListener("click", e => { if (e.target === settingsEl) settingsEl.style.display = "none"; });
+  updateShuffleUI();
   newGame();
 }
 </script>
