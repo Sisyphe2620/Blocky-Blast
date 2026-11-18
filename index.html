@@ -3,81 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Blocky Blast · 毛毡方块原型</title>
+<title>Blocky Blast · 毛毡方块</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; min-height: 100vh; background: linear-gradient(#c3b2e8, #b3a1de 60%, #a894d8);
+  body { margin: 0; min-height: 100vh; background: url(assets/bg.jpg) center top / cover no-repeat fixed, linear-gradient(#c3b2e8, #b3a1de 60%, #a894d8);
     font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #fff;
     display: flex; flex-direction: column; align-items: center; padding: 10px 10px 24px; user-select: none; }
   .top { width: min(94vw, 430px); display: flex; align-items: center; justify-content: space-between; margin: 6px 0 8px; }
   .score-pill { background: #8f7cc9; border-radius: 999px; padding: 6px 16px; font-size: 26px; font-weight: 800;
     box-shadow: 0 3px 0 rgba(0,0,0,.15); }
   .score-pill small { font-size: 12px; font-weight: 600; opacity: .85; display: block; text-align: center; }
+  .score-pill img { width: 24px; height: 24px; vertical-align: -6px; margin-right: 2px; }
   .btn { background: #8f7cc9; color: #fff; border: none; border-radius: 999px; padding: 8px 14px; font-size: 15px;
     font-weight: 700; box-shadow: 0 3px 0 rgba(0,0,0,.15); cursor: pointer; }
   .btn:active { transform: translateY(2px); box-shadow: none; }
   #board { width: min(94vw, 430px); aspect-ratio: 1; background: #cbbcf0; border-radius: 18px; padding: 8px;
     display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 4px;
     box-shadow: inset 0 0 0 3px #d9cdf5, 0 6px 0 rgba(0,0,0,.12); touch-action: none; }
-  .cell { background: #7d6cab; border-radius: 8px; position: relative; }
+  .cell { background: url(assets/cell.png) center / 100% 100% no-repeat; border-radius: 8px; position: relative; }
   .cell.preview-ok { outline: 3px solid rgba(255,255,255,.9); filter: brightness(1.15); }
   .cell.preview-bad { outline: 3px solid rgba(255,80,80,.9); }
   .cell.clearing { animation: pop .25s ease; }
   @keyframes pop { 50% { transform: scale(1.15); filter: brightness(1.5); } }
-  .blk { position: absolute; inset: 0; border-radius: 8px;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.35); }
-  /* laughing face: two eyes + open smile, drawn with gradients */
-  .blk::before { content: ""; position: absolute; inset: 0; border-radius: 8px;
-    background:
-      radial-gradient(circle at 34% 32%, #2b2135 11%, transparent 13%),
-      radial-gradient(circle at 66% 32%, #2b2135 11%, transparent 13%); }
-  .blk::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
-    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
-  .c0 { background: #a78bda; } .c1 { background: #f2a0c0; } .c2 { background: #f5a83c; }
-  .c3 { background: #f7d54a; } .c4 { background: #5fd3c0; } .c5 { background: #6db9f0; }
+  .blk { position: absolute; inset: 0; border-radius: 8px; }
+  .blk img { width: 100%; height: 100%; display: block; }
   #tray { width: min(94vw, 430px); display: flex; justify-content: space-around; align-items: flex-end;
     margin-top: 16px; min-height: 110px; }
   .piece { display: grid; gap: 3px; padding: 6px; border-radius: 12px; cursor: grab; touch-action: none; }
   .piece.selected { background: rgba(255,255,255,.35); outline: 3px solid #fff; }
   .piece.used { visibility: hidden; }
-  .piece .pcell { width: 30px; height: 30px; position: relative; border-radius: 7px;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.35); }
-  .piece .pcell::before { content: ""; position: absolute; inset: 0;
-    background:
-      radial-gradient(circle at 34% 32%, #2b2135 12%, transparent 14%),
-      radial-gradient(circle at 66% 32%, #2b2135 12%, transparent 14%); }
-  .piece .pcell::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
-    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
+  .piece .pcell { width: 30px; height: 30px; position: relative; border-radius: 7px; }
+  .piece .pcell img { width: 100%; height: 100%; display: block; }
   .piece .pcell.empty { background: transparent; box-shadow: none; }
-  .piece .pcell.empty::before, .piece .pcell.empty::after { display: none; }
-  #ghost .pcell::before { content: ""; position: absolute; inset: 0;
-    background:
-      radial-gradient(circle at 34% 32%, #2b2135 12%, transparent 14%),
-      radial-gradient(circle at 66% 32%, #2b2135 12%, transparent 14%); }
-  #ghost .pcell::after { content: ""; position: absolute; left: 30%; right: 30%; top: 52%; height: 26%;
-    border-bottom: 3px solid #2b2135; border-radius: 0 0 50% 50%; }
-  #ghost .pcell.empty::before, #ghost .pcell.empty::after { display: none; }
+  #ghost .pcell img { width: 100%; height: 100%; display: block; }
   #ghost { position: fixed; pointer-events: none; z-index: 50; display: none; opacity: .85; }
   #overlay { position: fixed; inset: 0; background: rgba(43,33,53,.72); display: none;
     align-items: center; justify-content: center; z-index: 60; }
   #overlay .card { background: #fff; color: #4a3a6b; border-radius: 20px; padding: 28px 24px; text-align: center; width: min(86vw, 320px); }
+  #overlay .trophy { width: 110px; height: 110px; margin-bottom: 4px; }
   #overlay h2 { margin: 0 0 8px; font-size: 24px; }
   #overlay p { margin: 0 0 16px; color: #7a6aa8; }
   #overlay .btn { background: #a78bda; font-size: 17px; padding: 10px 22px; }
   .hint { margin-top: 12px; font-size: 13px; opacity: .85; text-align: center; line-height: 1.6; }
+  .chars { width: min(94vw, 430px); display: block; margin: 14px auto 0; }
 </style>
 </head>
 <body>
   <div class="top">
-    <div class="score-pill"><small>分数 SCORE</small><span id="score">0</span></div>
-    <div class="score-pill"><small>最高 BEST</small><span id="best">0</span></div>
+    <div class="score-pill"><small>分数 SCORE</small><img src="assets/star-face.png" alt=""><span id="score">0</span></div>
+    <div class="score-pill"><small>最高 BEST</small><img src="assets/star-plain.png" alt=""><span id="best">0</span></div>
     <button class="btn" id="restart">↻ 重开</button>
   </div>
   <div id="board"></div>
   <div id="tray"></div>
   <div id="ghost"></div>
-  <div id="overlay"><div class="card"><h2>放不下啦！</h2><p id="finalScore"></p><button class="btn" id="again">再来一局</button></div></div>
-  <div class="hint">拖方块进棋盘，填满一行或一列就消除 · 放不下即结束<br>占位美术：等你的 ChatGPT 方块图到了直接替换</div>
+  <div id="overlay"><div class="card"><img class="trophy" src="assets/trophy.png" alt=""><h2>放不下啦！</h2><p id="finalScore"></p><button class="btn" id="again">再来一局</button></div></div>
+  <div class="hint">拖方块进棋盘，填满一行或一列就消除 · 放不下即结束</div>
+  <img class="chars" src="assets/characters.png" alt="">
 
 <script>
 "use strict";
@@ -144,6 +126,24 @@ if (typeof document !== "undefined") {
   try { best = parseInt(localStorage.getItem("blocky-best") || "0", 10) || 0; } catch (e) {}
   bestEl.textContent = best;
 
+  /* real felt art: one tile image per color x expression (ChatGPT art) */
+  const COLOR_NAMES = ["purple", "pink", "orange", "yellow", "teal", "blue"];
+  const FACES = {
+    purple: ["tile-laugh-purple.png", "tile-surprised-purple.png"],
+    pink: ["tile-laugh-pink.png", "tile-surprised-pink.png", "tile-angry-pink.png"],
+    orange: ["tile-laugh-orange.png", "tile-surprised-orange.png", "tile-angry-orange.png"],
+    yellow: ["tile-laugh-yellow.png", "tile-surprised-yellow.png", "tile-angry-yellow.png"],
+    teal: ["tile-laugh-teal.png", "tile-surprised-teal.png"],
+    blue: ["tile-laugh-blue.png", "tile-surprised-blue.png", "tile-angry-blue.png"],
+  };
+  function pickFace(color) {
+    const names = FACES[COLOR_NAMES[color]];
+    const pool = [names[0], names[0], names[1]].concat(names[2] ? [names[2]] : []);
+    return "assets/" + pool[Math.floor(Math.random() * pool.length)];
+  }
+  let faceBoard = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+  Object.values(FACES).flat().forEach(f => { const im = new Image(); im.src = "assets/" + f; });
+
   function buildBoard() {
     boardEl.innerHTML = "";
     for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
@@ -158,7 +158,11 @@ if (typeof document !== "undefined") {
       cell.querySelector(".blk")?.remove();
       if (board[r][c] !== -1) {
         const b = document.createElement("div");
-        b.className = "blk c" + board[r][c];
+        b.className = "blk";
+        const im = document.createElement("img");
+        im.src = faceBoard[r][c] || ("assets/" + FACES[COLOR_NAMES[board[r][c]]][0]);
+        im.alt = "";
+        b.appendChild(im);
         cell.appendChild(b);
       }
     });
@@ -178,7 +182,12 @@ if (typeof document !== "undefined") {
       for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
         const cell = document.createElement("div");
         const filled = p.shape.some(([dr, dc]) => dr === r && dc === c);
-        cell.className = "pcell" + (filled ? " c" + p.color : " empty");
+        cell.className = "pcell" + (filled ? "" : " empty");
+        if (filled) {
+          const im = document.createElement("img");
+          im.src = p.face; im.alt = "";
+          cell.appendChild(im);
+        }
         d.appendChild(cell);
       }
       d.addEventListener("pointerdown", e => startDrag(e, i, d));
@@ -186,7 +195,7 @@ if (typeof document !== "undefined") {
       trayEl.appendChild(d);
     });
   }
-  function refill() { tray = [randomPiece(), randomPiece(), randomPiece()]; selected = -1; renderTray(); }
+  function refill() { tray = [randomPiece(), randomPiece(), randomPiece()]; tray.forEach(p => { p.face = pickFace(p.color); }); selected = -1; renderTray(); }
   function setScore(n) {
     score = n; scoreEl.textContent = score;
     if (score > best) { best = score; bestEl.textContent = best;
@@ -214,9 +223,12 @@ if (typeof document !== "undefined") {
     const p = tray[i];
     if (!p || p.used || !canPlace(board, p.shape, r, c)) return false;
     placeOn(board, p.shape, r, c, p.color);
+    p.shape.forEach(([dr, dc]) => { faceBoard[r + dr][c + dc] = p.face; });
     p.used = true;
     let gained = p.shape.length;
     const lines = clearLines(board);
+    for (let rr = 0; rr < SIZE; rr++) for (let cc = 0; cc < SIZE; cc++)
+      if (board[rr][cc] === -1) faceBoard[rr][cc] = null;
     if (lines > 0) gained += lines * 10 + (lines > 1 ? 20 : 0);
     setScore(score + gained);
     renderBoard();
@@ -231,7 +243,8 @@ if (typeof document !== "undefined") {
     overlayEl.style.display = "flex";
   }
   function newGame() {
-    board = emptyBoard(); setScore(0); overlayEl.style.display = "none";
+    board = emptyBoard(); faceBoard = Array.from({length: SIZE}, () => Array(SIZE).fill(null));
+    setScore(0); overlayEl.style.display = "none";
     buildBoard(); renderBoard(); refill();
   }
 
@@ -251,9 +264,14 @@ if (typeof document !== "undefined") {
     for (let r = 0; r < box.rows; r++) for (let c = 0; c < box.cols; c++) {
       const cell = document.createElement("div");
       const filled = tray[i].shape.some(([dr, dc]) => dr === r && dc === c);
-      cell.className = "pcell" + (filled ? " c" + tray[i].color : " empty");
+      cell.className = "pcell" + (filled ? "" : " empty");
       cell.style.cssText = "width:30px;height:30px;position:relative;border-radius:7px;" +
         (filled ? "" : "background:transparent;");
+      if (filled) {
+        const im = document.createElement("img");
+        im.src = tray[i].face; im.alt = "";
+        cell.appendChild(im);
+      }
       ghostEl.appendChild(cell);
     }
     moveGhost(e);
